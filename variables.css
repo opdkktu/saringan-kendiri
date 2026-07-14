@@ -1,0 +1,41 @@
+/* ==========================================================================
+   DARK MODE — activated via [data-theme="dark"] on <body>
+   ========================================================================== */
+
+body[data-theme="dark"]{
+  --bg-base: #0B1A1D;
+  --bg-elev: #10262A;
+  --ink-900: #EAF6F4;
+  --ink-700: #C9DEDC;
+  --ink-500: #8FB0AC;
+  --ink-300: #5B7A78;
+
+  --glass-bg: rgba(16,38,42,0.55);
+  --glass-bg-strong: rgba(16,38,42,0.8);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.45);
+
+  --mint-200: #123B35;
+
+  color: var(--ink-900);
+  background: var(--bg-base);
+}
+
+body[data-theme="dark"] .aurora{
+  background: radial-gradient(120% 100% at 10% 0%, #123B35, var(--bg-base) 55%);
+}
+body[data-theme="dark"] .blob{ opacity:.28; }
+body[data-theme="dark"] input[type="text"],
+body[data-theme="dark"] input[type="tel"],
+body[data-theme="dark"] input[type="number"]{
+  background: rgba(255,255,255,0.05); color: var(--ink-900);
+}
+body[data-theme="dark"] .btn--ghost{ background: rgba(255,255,255,0.06); }
+body[data-theme="dark"] .icon-btn{ background: rgba(255,255,255,0.08); color: var(--ink-900); }
+body[data-theme="dark"] .skeleton{ background: linear-gradient(90deg, #16302e 25%, #1c3a37 37%, #16302e 63%); }
+
+/* High contrast support */
+@media (prefers-contrast: more){
+  :root{ --glass-border: rgba(0,0,0,0.4); }
+  input{ border-width: 2px !important; }
+}

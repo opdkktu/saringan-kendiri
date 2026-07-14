@@ -1,0 +1,175 @@
+// ==========================================================================
+// validation.js — field validation, Malaysian IC parsing, BP range checks.
+// ==========================================================================
+import { digitsOnly } from './utils.js';
+import { CONFIG } from './config.js';
+
+/** Validate full name: letters, spaces, common name punctuation, 2-80 chars. */
+export function validateFullName(name) {
+  const trimmed = (name || '').trim();
+  if (trimmed.length < 2) return { valid: false, message: 'Sila masukkan nama penuh anda.' };
+  if (trimmed.length > 80) return { valid: false, message: 'Nama terlalu panjang.' };
+  if (!/^[a-zA-Z\u00C0-\u024F .'\-@/]+$/.test(trimmed)) {
+    return { valid: false, message: 'Nama mengandungi aksara yang tidak sah.' };
+  }
+  return { valid: true, message: '' };
+}
+
+/**
+ * Parse and validate a Malaysian IC number (format YYMMDD-PB-###G).
+ * Returns { valid, dob, age, gender, ageGroup, message }.
+ */
+export function validateAndParseIC(icRaw) {
+  const ic = digitsOnly(icRaw);
+  if (ic.length !== 12) {
+    return { valid: false, message: 'Nombor IC mesti mengandungi 12 digit.' };
+  }
+
+  const yy = ic.slice(0, 2);
+  const mm = parseInt(ic.slice(2, 4), 10);
+  const dd = parseInt(ic.slice(4, 6), 10);
+  const stateCode = ic.slice(6, 8);
+  const lastDigit = parseInt(ic.slice(11, 12), 10);
+
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) {
+    return { valid: false, message: 'Tarikh lahir dalam nombor IC tidak sah.' };
+  }
+
+  // Heuristic century cutoff: if the two-digit year is greater than the
+  // current two-digit year, assume 1900s, otherwise 2000s.
+  const currentYY = new Date().getFullYear() % 100;
+  const century = parseInt(yy, 10) > currentYY ? 1900 : 2000;
+  const fullYear = century + parseInt(yy, 10);
+
+  const dob = new Date(fullYear, mm - 1, dd);
+  if (dob.getMonth() !== mm - 1 || dob.getDate() !== dd) {
+    return { valid: false, message: 'Tarikh lahir dalam nombor IC tidak sah.' };
+  }
+
+  const validStateCodes = new Set([
+    '01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16',
+    '21','22','23','24','25','26','27','28','29',
+    '30','31','32','33','34','35','36','37','38','39',
+    '40','41','42','43','44','45','46','47','48','49',
+    '50','51','52','53','54','55','56','57','58','59',
+    '82','83','84','85','86','87','88','89','90','91','92','93','94','95','96','97','98','99'
+  ]);
+  if (!validStateCodes.has(stateCode)) {
+    return { valid: false, message: 'Kod negeri dalam nombor IC tidak sah.' };
+  }
+
+  const gender = lastDigit % 2 === 0 ? 'Perempuan' : 'Lelaki';
+  const age = calculateAge(dob);
+  const ageGroup = getAgeGroup(age);
+
+  if (age < 0 || age > 120) {
+    return { valid: false, message: 'Nombor IC menghasilkan umur yang tidak munasabah.' };
+  }
+
+  return {
+    valid: true,
+    message: '',
+    formatted: `${ic.slice(0,6)}-${ic.slice(6,8)}-${ic.slice(8,12)}`,
+    dob,
+    age,
+    gender,
+    ageGroup
+  };
+}
+
+export function calculateAge(dob) {
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+export function getAgeGroup(age) {
+  if (age < 13) return 'Kanak-kanak';
+  if (age < 18) return 'Remaja';
+  if (age < 40) return 'Dewasa Muda';
+  if (age < 60) return 'Dewasa';
+  return 'Warga Emas';
+}
+
+/** Validate a Malaysian mobile/landline number (loosely, 9-11 digits, valid prefix). */
+export function validatePhone(phoneRaw) {
+  const digits = digitsOnly(phoneRaw);
+  if (digits.length < 9 || digits.length > 11) {
+    return { valid: false, message: 'Nombor telefon mesti 9-11 digit.' };
+  }
+  if (!/^0(1[0-9]|[3-9])/.test(digits)) {
+    return { valid: false, message: 'Format nombor telefon tidak dikenali (contoh: 012-3456789).' };
+  }
+  return { valid: true, message: '', formatted: digits };
+}
+
+/** Ensure at least one medical condition checkbox is selected. */
+export function validateConditions(selected) {
+  if (!selected || selected.length === 0) {
+    return { valid: false, message: 'Sila pilih sekurang-kurangnya satu keadaan (atau "Tiada Penyakit Diketahui").' };
+  }
+  return { valid: true, message: '' };
+}
+
+/** Validate an uploaded image file against type/size rules. */
+export function validateImageFile(file) {
+  if (!file) return { valid: false, message: 'Sila muat naik gambar monitor tekanan darah.' };
+  if (!CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return { valid: false, message: 'Jenis fail tidak dibenarkan. Gunakan JPG, PNG atau WEBP.' };
+  }
+  const maxBytes = CONFIG.MAX_IMAGE_MB * 1024 * 1024;
+  if (file.size > maxBytes) {
+    return { valid: false, message: `Saiz fail melebihi ${CONFIG.MAX_IMAGE_MB}MB.` };
+  }
+  return { valid: true, message: '' };
+}
+
+/** Validate extracted/entered BP numbers against physiologically plausible ranges. */
+export function validateBPValues({ systolic, diastolic, pulse }) {
+  const errors = [];
+  const r = CONFIG.BP_RANGE;
+
+  if (!Number.isFinite(systolic) || systolic < r.systolic.min || systolic > r.systolic.max) {
+    errors.push(`Sistolik mesti antara ${r.systolic.min}-${r.systolic.max} mmHg.`);
+  }
+  if (!Number.isFinite(diastolic) || diastolic < r.diastolic.min || diastolic > r.diastolic.max) {
+    errors.push(`Diastolik mesti antara ${r.diastolic.min}-${r.diastolic.max} mmHg.`);
+  }
+  if (!Number.isFinite(pulse) || pulse < r.pulse.min || pulse > r.pulse.max) {
+    errors.push(`Nadi mesti antara ${r.pulse.min}-${r.pulse.max} bpm.`);
+  }
+  if (Number.isFinite(systolic) && Number.isFinite(diastolic) && systolic <= diastolic) {
+    errors.push('Sistolik mesti lebih tinggi daripada diastolik.');
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/** Classify a BP reading into a patient-friendly interpretation band. Never diagnoses. */
+export function interpretBP(systolic, diastolic) {
+  const band = CONFIG.BP_BANDS.find(b => b.test(systolic, diastolic));
+  const messages = {
+    normal: 'Bacaan anda berada dalam julat normal. Teruskan gaya hidup sihat dan pantauan berkala.',
+    elevated: 'Bacaan anda sedikit meningkat. Amalkan diet rendah garam dan pantau lagi dalam beberapa hari.',
+    stage1: 'Bacaan menunjukkan tanda hipertensi tahap awal. Disyorkan untuk membuat temujanji dengan klinik kesihatan.',
+    stage2: 'Bacaan menunjukkan tekanan darah tinggi yang ketara. Sila rujuk klinik/doktor secepat mungkin.',
+    crisis: 'Bacaan sangat tinggi. Sila dapatkan rawatan perubatan SEGERA di klinik atau hospital berdekatan.'
+  };
+  return {
+    key: band.key,
+    label: band.label,
+    color: band.color,
+    message: messages[band.key],
+    urgent: band.key === 'stage2' || band.key === 'crisis'
+  };
+}
+
+/** Check whether a submission for this IC happened within the duplicate window (client-side hint only; server enforces it too). */
+export function isLikelyDuplicate(icFormatted, storageGet) {
+  const last = storageGet(`sk_last_submit_${icFormatted}`);
+  if (!last) return false;
+  const minutesSince = (Date.now() - last) / 60000;
+  return minutesSince < CONFIG.DUPLICATE_WINDOW_MINUTES;
+}

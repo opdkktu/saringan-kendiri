@@ -1,0 +1,83 @@
+// ==========================================================================
+// upload.js — drag & drop, clipboard paste, and client-side compression
+// for the BP monitor photo uploader.
+// ==========================================================================
+import { CONFIG } from './config.js';
+import { validateImageFile } from './validation.js';
+import { readFileAsDataURL, showToast } from './utils.js';
+
+/**
+ * Wires up an uploader element with drag/drop, click-to-pick, and paste
+ * support. Calls onFile(file) whenever a valid image is selected.
+ */
+export function initUploader({ uploaderEl, inputEl, onFile }) {
+  uploaderEl.addEventListener('click', () => inputEl.click());
+  uploaderEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputEl.click(); }
+  });
+
+  inputEl.addEventListener('change', () => {
+    const file = inputEl.files?.[0];
+    if (file) handleCandidate(file, onFile);
+  });
+
+  ['dragenter', 'dragover'].forEach(evt =>
+    uploaderEl.addEventListener(evt, (e) => {
+      e.preventDefault();
+      uploaderEl.classList.add('uploader--dragover');
+    })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    uploaderEl.addEventListener(evt, (e) => {
+      e.preventDefault();
+      uploaderEl.classList.remove('uploader--dragover');
+    })
+  );
+  uploaderEl.addEventListener('drop', (e) => {
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleCandidate(file, onFile);
+  });
+
+  document.addEventListener('paste', (e) => {
+    const item = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
+    if (item) handleCandidate(item.getAsFile(), onFile);
+  });
+}
+
+function handleCandidate(file, onFile) {
+  const { valid, message } = validateImageFile(file);
+  if (!valid) {
+    showToast(message, 'error');
+    return;
+  }
+  onFile(file);
+}
+
+/**
+ * Compress an image file to JPEG under COMPRESSION_MAX_DIMENSION and
+ * COMPRESSION_QUALITY. Returns { dataUrl, base64, mimeType }.
+ */
+export async function compressImage(file) {
+  const originalDataUrl = await readFileAsDataURL(file);
+  const img = await loadImage(originalDataUrl);
+
+  const maxDim = CONFIG.COMPRESSION_MAX_DIMENSION;
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const dataUrl = canvas.toDataURL('image/jpeg', CONFIG.COMPRESSION_QUALITY);
+  const base64 = dataUrl.split(',')[1];
+  return { dataUrl, base64, mimeType: 'image/jpeg' };
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}

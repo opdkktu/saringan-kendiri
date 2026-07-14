@@ -1,0 +1,101 @@
+// ==========================================================================
+// utils.js — generic, dependency-free helpers shared across modules.
+// ==========================================================================
+
+/** Debounce a function call. */
+export function debounce(fn, delay = 300) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/** Escape a string for safe insertion into HTML (XSS guard). */
+export function escapeHtml(value) {
+  const div = document.createElement('div');
+  div.textContent = String(value ?? '');
+  return div.innerHTML;
+}
+
+/** Strip anything that isn't a digit. */
+export function digitsOnly(value) {
+  return String(value ?? '').replace(/\D/g, '');
+}
+
+/** Generate a reasonably unique submission id, e.g. SK-20260714-8F2K. */
+export function generateSubmissionId() {
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `SK-${stamp}-${rand}`;
+}
+
+export function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+/** Format a Date as a readable Malaysian-style string. */
+export function formatDate(date) {
+  return new Intl.DateTimeFormat('ms-MY', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  }).format(date);
+}
+
+/** Show a transient toast notification. */
+export function showToast(message, type = 'info', duration = 4200) {
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const el = document.createElement('div');
+  el.className = `toast toast--${type}`;
+  el.textContent = message;
+  stack.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s ease';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+/** Read a File as a data URL (Promise-based). */
+export function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Simple localStorage wrapper that never throws. */
+export const storage = {
+  get(key, fallback = null) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage full/blocked */ }
+  },
+  remove(key) {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+  }
+};
+
+/** Ripple effect for .btn--ripple buttons. */
+export function attachRipple(button) {
+  button.addEventListener('click', (e) => {
+    const rect = button.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    const size = Math.max(rect.width, rect.height);
+    ripple.className = 'ripple-el';
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+    button.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 650);
+  });
+}
