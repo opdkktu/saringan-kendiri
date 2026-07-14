@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<meta name="description" content="Saringan Kendiri — semak tekanan darah anda secara automatik dengan imbasan foto monitor tekanan darah.">
+<title>Saringan Kendiri · Semakan Tekanan Darah Pintar</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/forms.css">
+<link rel="stylesheet" href="css/loading.css">
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/darkmode.css">
+</head>
+<body data-theme="light">
+
+<!-- Aurora ambient background -->
+<div class="aurora" aria-hidden="true">
+  <span class="blob blob--teal"></span>
+  <span class="blob blob--lavender"></span>
+  <span class="blob blob--mint"></span>
+  <div class="grain"></div>
+</div>
+
+<!-- Cursor glow (desktop only, injected via JS) -->
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<!-- Skip link for a11y -->
+<a href="#mainContent" class="skip-link">Langkau ke kandungan utama</a>
+
+<!-- Top nav -->
+<header class="topbar glass">
+  <div class="topbar__brand">
+    <span class="logo floating-logo" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="30" height="30"><path d="M20 6 C 12 14, 6 20, 6 26 A 14 14 0 0 0 34 26 C 34 20, 28 14, 20 6 Z" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--teal-500)"/><stop offset="1" stop-color="var(--lavender-500)"/></linearGradient></defs></svg>
+    </span>
+    <div class="topbar__title">
+      <strong>Saringan Kendiri</strong>
+      <span>Semakan tekanan darah automatik</span>
+    </div>
+  </div>
+  <nav class="topbar__nav" aria-label="Navigasi utama">
+    <a href="index.html" class="nav-pill nav-pill--active">Saringan</a>
+    <a href="history.html" class="nav-pill">Sejarah Saya</a>
+    <a href="admin.html" class="nav-pill">Panel Admin</a>
+    <button id="themeToggle" class="icon-btn" aria-label="Tukar mod gelap/terang" title="Tukar tema">
+      <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.4 5.4 0 0 1-7.54-7.54A9 9 0 0 0 12 3Z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main id="mainContent">
+
+  <!-- HERO : the signature ECG pulse -->
+  <section class="hero">
+    <div class="hero__copy">
+      <p class="eyebrow">Untuk kemudahan kesihatan primer &amp; komuniti</p>
+      <h1>Satu foto. Bacaan tekanan darah anda, <span class="grad-text">disemak sendiri.</span></h1>
+      <p class="hero__lede">Ambil gambar paparan monitor tekanan darah digital anda. Sistem membaca nombor secara automatik, mengesahkan julat, dan memberi tafsiran mesra pesakit — dalam saat.</p>
+      <div class="hero__cta">
+        <a href="#screeningForm" class="btn btn--primary btn--ripple">Mula Saringan</a>
+        <a href="history.html" class="btn btn--ghost">Lihat Sejarah Saya</a>
+      </div>
+      <ul class="hero__trust" aria-label="Ciri keselamatan">
+        <li>🔒 Data disulitkan &amp; disimpan selamat</li>
+        <li>⚡ Keputusan OCR dalam &lt; 10 saat</li>
+        <li>🩺 Bukan diagnosis — rujukan klinik disyorkan</li>
+      </ul>
+    </div>
+
+    <!-- Living ECG signature -->
+    <div class="hero__vitals glass" role="img" aria-label="Animasi denyutan ECG dekoratif">
+      <svg class="ecg" viewBox="0 0 600 160" preserveAspectRatio="none">
+        <polyline class="ecg__line" fill="none" stroke-width="3"
+          points="0,80 60,80 80,80 95,40 110,140 125,20 140,80 170,80 220,80 240,60 260,100 280,80 340,80 360,80 375,40 390,140 405,20 420,80 450,80 500,80 520,60 540,100 560,80 600,80"/>
+      </svg>
+      <div class="vital-chip vital-chip--sys">
+        <span class="vital-chip__label">Sistolik</span>
+        <span class="vital-chip__value" id="demoSys">120</span>
+      </div>
+      <div class="vital-chip vital-chip--dia">
+        <span class="vital-chip__label">Diastolik</span>
+        <span class="vital-chip__value" id="demoDia">80</span>
+      </div>
+      <div class="vital-chip vital-chip--pulse">
+        <span class="vital-chip__label">Nadi</span>
+        <span class="vital-chip__value" id="demoPulse">72</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section id="screeningForm" class="screening">
+    <div class="section-head">
+      <p class="eyebrow">Borang Saringan</p>
+      <h2>Isi maklumat anda</h2>
+    </div>
+
+    <form id="bpForm" class="glass form-card" novalidate autocomplete="off">
+
+      <!-- STEP 1 : identity -->
+      <fieldset class="form-fieldset">
+        <legend>Maklumat Peribadi</legend>
+
+        <div class="field">
+          <label for="fullName">Nama Penuh</label>
+          <input type="text" id="fullName" name="fullName" required placeholder="Contoh: Ahmad bin Ali" aria-describedby="fullNameError">
+          <span class="field-error" id="fullNameError" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label for="icNumber">Nombor Kad Pengenalan (IC)</label>
+          <input type="text" id="icNumber" name="icNumber" inputmode="numeric" maxlength="14" required placeholder="YYMMDD-PB-###G" aria-describedby="icError icInfo">
+          <span class="field-error" id="icError" role="alert"></span>
+          <div class="field-info" id="icInfo" aria-live="polite"></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="phoneNumber">Nombor Telefon</label>
+            <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="01X-XXXXXXX" aria-describedby="phoneError">
+            <span class="field-error" id="phoneError" role="alert"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Keadaan Perubatan Sedia Ada</label>
+          <div class="checkbox-grid" role="group" aria-label="Keadaan perubatan">
+            <label class="checkbox-pill"><input type="checkbox" name="condition" value="Diabetes Mellitus"><span>Diabetes Mellitus</span></label>
+            <label class="checkbox-pill"><input type="checkbox" name="condition" value="Hypertension"><span>Hipertensi</span></label>
+            <label class="checkbox-pill"><input type="checkbox" name="condition" value="Dyslipidaemia"><span>Dislipidemia</span></label>
+            <label class="checkbox-pill"><input type="checkbox" name="condition" value="No Known Medical Illness" id="conditionNone"><span>Tiada Penyakit Diketahui</span></label>
+          </div>
+          <span class="field-error" id="conditionError" role="alert"></span>
+        </div>
+      </fieldset>
+
+      <!-- STEP 2 : photo -->
+      <fieldset class="form-fieldset">
+        <legend>Gambar Monitor Tekanan Darah</legend>
+
+        <div class="uploader" id="uploader" tabindex="0" role="button"
+             aria-label="Muat naik atau seret gambar monitor tekanan darah, atau tampal dari papan klip">
+          <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment" hidden>
+          <div class="uploader__idle" id="uploaderIdle">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 16.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.5M16 8l-4-4-4 4M12 4v13"/></svg>
+            <p><strong>Seret &amp; lepas</strong> gambar di sini, klik untuk pilih fail, atau tampal (Ctrl+V)</p>
+            <span class="uploader__hint">JPG / PNG · Maks 8MB</span>
+          </div>
+          <div class="uploader__preview" id="uploaderPreview" hidden>
+            <img id="previewImage" alt="Pratonton gambar monitor tekanan darah yang dimuat naik">
+            <button type="button" class="icon-btn icon-btn--danger" id="removeImageBtn" aria-label="Buang gambar">✕</button>
+          </div>
+        </div>
+        <span class="field-error" id="photoError" role="alert"></span>
+
+        <!-- OCR preview panel -->
+        <div class="ocr-panel" id="ocrPanel" hidden>
+          <div class="ocr-panel__head">
+            <h3>Pratonton OCR</h3>
+            <span class="badge" id="ocrConfidenceBadge">Keyakinan: —</span>
+          </div>
+          <div class="ocr-panel__values">
+            <div class="ocr-value">
+              <label for="ocrSystolic">Sistolik</label>
+              <input type="number" id="ocrSystolic" min="50" max="260">
+            </div>
+            <div class="ocr-value">
+              <label for="ocrDiastolic">Diastolik</label>
+              <input type="number" id="ocrDiastolic" min="30" max="180">
+            </div>
+            <div class="ocr-value">
+              <label for="ocrPulse">Nadi</label>
+              <input type="number" id="ocrPulse" min="30" max="220">
+            </div>
+          </div>
+          <p class="ocr-panel__note">Sila semak &amp; betulkan nombor di atas jika perlu sebelum menghantar.</p>
+          <div class="interpretation" id="interpretationBox" hidden>
+            <span class="interpretation__dot" id="interpretationDot"></span>
+            <div>
+              <strong id="interpretationLabel">—</strong>
+              <p id="interpretationText"></p>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" id="resetBtn">Set Semula</button>
+        <button type="submit" class="btn btn--primary btn--ripple" id="submitBtn">
+          <span>Hantar Saringan</span>
+        </button>
+      </div>
+      <p class="form-consent">Dengan menghantar borang ini, anda bersetuju data disimpan untuk tujuan saringan kesihatan komuniti.</p>
+    </form>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Saringan Kendiri © <span id="year"></span> · Alat saringan sokongan, bukan pengganti nasihat perubatan profesional.</p>
+</footer>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay" hidden aria-live="assertive" role="status">
+  <div class="loading-card glass">
+    <div class="loading-ring"></div>
+    <p class="loading-step" id="loadingStep">Menyediakan imej…</p>
+    <div class="loading-progress">
+      <div class="loading-progress__bar" id="loadingProgressBar"></div>
+    </div>
+    <ol class="loading-steps" id="loadingStepsList">
+      <li data-step="prepare">Menyediakan imej</li>
+      <li data-step="optimise">Mengoptimumkan imej</li>
+      <li data-step="ocr">Menjalankan OCR</li>
+      <li data-step="extract">Mengekstrak nombor</li>
+      <li data-step="upload">Memuat naik</li>
+      <li data-step="save">Menyimpan rekod</li>
+      <li data-step="done">Selesai</li>
+    </ol>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script type="module" src="js/config.js"></script>
+<script type="module" src="js/utils.js"></script>
+<script type="module" src="js/validation.js"></script>
+<script type="module" src="js/loading.js"></script>
+<script type="module" src="js/ocr.js"></script>
+<script type="module" src="js/api.js"></script>
+<script type="module" src="js/upload.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

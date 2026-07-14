@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiada Sambungan · Saringan Kendiri</title>
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/components.css">
+<style>
+  body{ display:flex; align-items:center; justify-content:center; min-height:100vh; text-align:center; padding: var(--space-5); }
+  .offline-card{ max-width:420px; padding: var(--space-6); border-radius: var(--radius-lg); }
+</style>
+</head>
+<body>
+  <div class="glass offline-card">
+    <h2>Anda sedang luar talian</h2>
+    <p>Sambungan internet diperlukan untuk menghantar saringan atau melihat sejarah. Sila semak sambungan Wi-Fi/data anda dan cuba lagi.</p>
+    <button class="btn btn--primary" onclick="location.reload()">Cuba Lagi</button>
+  </div>
+</body>
+</html>

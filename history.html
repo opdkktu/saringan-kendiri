@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0F766E">
+<title>Sejarah Saya · Saringan Kendiri</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/forms.css">
+<link rel="stylesheet" href="css/loading.css">
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/darkmode.css">
+</head>
+<body data-theme="light">
+<div class="aurora" aria-hidden="true">
+  <span class="blob blob--teal"></span>
+  <span class="blob blob--lavender"></span>
+  <span class="blob blob--mint"></span>
+</div>
+<a href="#mainContent" class="skip-link">Langkau ke kandungan utama</a>
+
+<header class="topbar glass">
+  <div class="topbar__brand">
+    <span class="logo floating-logo" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="30" height="30"><path d="M20 6 C 12 14, 6 20, 6 26 A 14 14 0 0 0 34 26 C 34 20, 28 14, 20 6 Z" fill="url(#g2)"/><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--teal-500)"/><stop offset="1" stop-color="var(--lavender-500)"/></linearGradient></defs></svg>
+    </span>
+    <div class="topbar__title"><strong>Saringan Kendiri</strong><span>Sejarah bacaan anda</span></div>
+  </div>
+  <nav class="topbar__nav" aria-label="Navigasi utama">
+    <a href="index.html" class="nav-pill">Saringan</a>
+    <a href="history.html" class="nav-pill nav-pill--active">Sejarah Saya</a>
+    <a href="admin.html" class="nav-pill">Panel Admin</a>
+    <button id="themeToggle" class="icon-btn" aria-label="Tukar tema">🌓</button>
+  </nav>
+</header>
+
+<main id="mainContent" class="page-transition">
+  <section class="section-head" style="margin-top:var(--space-7)">
+    <p class="eyebrow">Semak Rekod</p>
+    <h2>Lihat sejarah bacaan tekanan darah anda</h2>
+  </section>
+
+  <form id="lookupForm" class="glass form-card" style="max-width:520px" novalidate>
+    <div class="field">
+      <label for="lookupIC">Nombor IC</label>
+      <input type="text" id="lookupIC" maxlength="14" placeholder="YYMMDD-PB-###G" required>
+      <span class="field-error" id="lookupICError" role="alert"></span>
+    </div>
+    <div class="field">
+      <label for="lookupPhone">Nombor Telefon</label>
+      <input type="tel" id="lookupPhone" placeholder="01X-XXXXXXX" required>
+      <span class="field-error" id="lookupPhoneError" role="alert"></span>
+    </div>
+    <div class="form-actions" style="justify-content:center">
+      <button type="submit" class="btn btn--primary btn--ripple"><span>Semak Sejarah</span></button>
+    </div>
+  </form>
+
+  <section id="resultsSection" hidden style="margin-top:var(--space-6)">
+    <div class="glass card" style="margin-bottom:var(--space-5)">
+      <h3>Trend Bacaan</h3>
+      <canvas id="trendChart" height="110"></canvas>
+    </div>
+
+    <div class="glass card">
+      <h3>Rekod Terdahulu</h3>
+      <div style="overflow-x:auto">
+        <table id="historyTable" style="width:100%; border-collapse:collapse; font-size:var(--fs-sm)">
+          <thead>
+            <tr style="text-align:left; border-bottom:1px solid var(--glass-border)">
+              <th style="padding:8px">Tarikh</th>
+              <th style="padding:8px">Sistolik</th>
+              <th style="padding:8px">Diastolik</th>
+              <th style="padding:8px">Nadi</th>
+              <th style="padding:8px">Tafsiran</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div id="emptyState" class="glass card" style="text-align:center; margin-top:var(--space-6)" hidden>
+    <p>Tiada rekod dijumpai untuk IC dan nombor telefon ini.</p>
+  </div>
+</main>
+
+<footer class="site-footer"><p>Saringan Kendiri © <span id="year"></span></p></footer>
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script type="module" src="js/history.js"></script>
+</body>
+</html>

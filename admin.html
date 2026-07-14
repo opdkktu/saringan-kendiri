@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0F766E">
+<title>Panel Admin · Saringan Kendiri</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/forms.css">
+<link rel="stylesheet" href="css/loading.css">
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/darkmode.css">
+<style>
+  .admin-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-4); margin-bottom:var(--space-6); }
+  .charts-grid{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:var(--space-4); margin-bottom:var(--space-6); }
+  .toolbar{ display:flex; gap:var(--space-3); align-items:center; flex-wrap:wrap; margin-bottom:var(--space-4); }
+  .toolbar input, .toolbar select{ padding:10px 14px; border-radius:var(--radius-md); border:1px solid var(--glass-border); background:rgba(255,255,255,.7); }
+  @media (max-width:980px){ .admin-grid{ grid-template-columns:repeat(2,1fr);} .charts-grid{ grid-template-columns:1fr;} }
+</style>
+</head>
+<body data-theme="light">
+<div class="aurora" aria-hidden="true"><span class="blob blob--teal"></span><span class="blob blob--lavender"></span><span class="blob blob--mint"></span></div>
+<a href="#mainContent" class="skip-link">Langkau ke kandungan utama</a>
+
+<header class="topbar glass">
+  <div class="topbar__brand">
+    <span class="logo floating-logo" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="30" height="30"><path d="M20 6 C 12 14, 6 20, 6 26 A 14 14 0 0 0 34 26 C 34 20, 28 14, 20 6 Z" fill="url(#g3)"/><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--teal-500)"/><stop offset="1" stop-color="var(--lavender-500)"/></linearGradient></defs></svg>
+    </span>
+    <div class="topbar__title"><strong>Saringan Kendiri</strong><span>Panel Pentadbir</span></div>
+  </div>
+  <nav class="topbar__nav" aria-label="Navigasi utama">
+    <a href="index.html" class="nav-pill">Saringan</a>
+    <a href="history.html" class="nav-pill">Sejarah Saya</a>
+    <a href="admin.html" class="nav-pill nav-pill--active">Panel Admin</a>
+    <button id="themeToggle" class="icon-btn" aria-label="Tukar tema">🌓</button>
+  </nav>
+</header>
+
+<main id="mainContent" class="page-transition" style="padding-top:var(--space-6); padding-bottom:var(--space-8)">
+
+  <div class="glass card" style="max-width:420px; margin:0 auto var(--space-6)" id="tokenGate">
+    <label for="adminToken">Token Akses Admin</label>
+    <input type="password" id="adminToken" placeholder="Masukkan token admin">
+    <div class="form-actions" style="justify-content:center; margin-top:var(--space-3)">
+      <button class="btn btn--primary btn--ripple" id="adminLoginBtn"><span>Masuk</span></button>
+    </div>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="toolbar glass" style="padding:var(--space-3) var(--space-4); border-radius:var(--radius-md)">
+      <input type="text" id="searchInput" placeholder="Cari nama / IC / ID penyerahan…">
+      <select id="rangeSelect">
+        <option value="7">7 hari lepas</option>
+        <option value="30" selected>30 hari lepas</option>
+        <option value="90">90 hari lepas</option>
+        <option value="0">Semua</option>
+      </select>
+      <button class="btn btn--ghost" id="exportBtn">⬇ Eksport CSV</button>
+      <button class="btn btn--ghost" id="printBtn">🖨 Cetak</button>
+    </div>
+
+    <div class="admin-grid">
+      <div class="glass card stat-card"><span class="label">Jumlah Penyerahan</span><span class="value" id="statTotal">—</span></div>
+      <div class="glass card stat-card"><span class="label">Penyerahan Hari Ini</span><span class="value" id="statToday">—</span></div>
+      <div class="glass card stat-card"><span class="label">Purata Sistolik</span><span class="value" id="statAvgSys">—</span></div>
+      <div class="glass card stat-card"><span class="label">% Tekanan Darah Tinggi</span><span class="value" id="statHighPct">—</span></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="glass card"><h3>Trend Penyerahan</h3><canvas id="chartTrend" height="140"></canvas></div>
+      <div class="glass card"><h3>Taburan Umur</h3><canvas id="chartAge" height="140"></canvas></div>
+      <div class="glass card"><h3>Taburan Jantina</h3><canvas id="chartGender" height="140"></canvas></div>
+    </div>
+
+    <div class="glass card">
+      <h3>Rekod Penyerahan</h3>
+      <div style="overflow-x:auto">
+        <table id="recordsTable" style="width:100%; border-collapse:collapse; font-size:var(--fs-sm)">
+          <thead>
+            <tr style="text-align:left; border-bottom:1px solid var(--glass-border)">
+              <th style="padding:8px">Tarikh</th><th style="padding:8px">Nama</th><th style="padding:8px">IC</th>
+              <th style="padding:8px">Sistolik</th><th style="padding:8px">Diastolik</th><th style="padding:8px">Nadi</th>
+              <th style="padding:8px">Tafsiran</th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer"><p>Saringan Kendiri © <span id="year"></span></p></footer>
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
